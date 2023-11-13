@@ -72,23 +72,29 @@ class DeepBackPropagation:
         self.feed_foward()
         self.back_propagation()
 
+from PIL import Image
+from matplotlib import pyplot
 
-img = np.array([
-    [2, 2, 6, 4, 8, 5, 4, 4,],
-    [1, 1, 9, 3, 3, 5, 5, 7,],
-    [0, 0, 0, 6, 0, 4, 9, 8,],
-    [3, 3, 8, 5, 6, 7, 7, 5,],
-    [4, 2, 5, 7, 1, 6, 0, 6,],
-    [1, 2, 7, 0, 4, 0, 2, 1,],
-    [8, 6, 7, 2, 6, 8, 1, 0,],
-    [8, 9, 0, 1, 4, 2, 1, 2,],
-])
+percentga_to_reducer = .3
+image = Image.open('./DRIVE/Original/01_test.tif').convert('L')
+width, height = image.size
+resized_dimensions = (int(width * percentga_to_reducer), int(height * percentga_to_reducer))
+resized = image.resize(resized_dimensions)
+img = np.array(resized)
+
+
+image_target = Image.open('./DRIVE/Groundtruth/01_manual1.tif').convert('L')
+width, height = image_target.size
+resized_dimensions = (int(width * percentga_to_reducer), int(height * percentga_to_reducer))
+resized = image_target.resize(resized_dimensions)
+
 mask = np.array([
     [1, 1, 1],
     [1, 1, 1],
     [1, 1, 1],
 ])
-target = np.ones(36)
+
+target = np.array(resized)
 DBP = DeepBackPropagation(img=img, mask=mask)
 for i in range(10):
     activation, activation_round = DBP.feed_foward()
