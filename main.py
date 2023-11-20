@@ -2,9 +2,8 @@ import numpy as np
 
 
 class DeepBackPropagation:
-    def __init__(self, mask, img) -> None:
+    def __init__(self, mask) -> None:
         self.mask = mask
-        self.img = img
 
     def convolute_img(self):
         self.mask_normalized = self.mask / np.sum(self.mask)
@@ -19,10 +18,10 @@ class DeepBackPropagation:
                 sub_img = (sub_img * self.mask_normalized) / np.max(self.img)
                 self.img_convolution[index_column, index_row] = sub_img.sum()
         column_convolution, row_convolution = self.img_convolution.shape
-        self.number_neural_network_1 = column_convolution * row_convolution
+        self.number_neural_network_1 = column * row
         self.number_weight_1 = column_convolution * row_convolution
         self.number_neural_network_2 = column * row
-        self.number_weight_2 = column_convolution * row_convolution
+        self.number_weight_2 = column * row
         self.layer_1 = np.random.randn(
             self.number_neural_network_1, self.number_weight_1)
         self.bias_1 = np.ones(self.number_neural_network_1)
@@ -32,6 +31,8 @@ class DeepBackPropagation:
         self.bias_2 = np.ones(self.number_neural_network_2)
         self.output_2 = np.zeros(self.number_neural_network_2)
 
+    def set_image(self, img):
+        self.img = img
 
     def feed_forward(self):
         self.convolute_img()
@@ -40,32 +41,32 @@ class DeepBackPropagation:
             sum_weight = self.img_convolution_vector * self.layer_1[index_mask]
             self.output_1[index_mask] = self.bias_1[index_mask] + \
                 sum_weight.sum()
-        
+        self.output_1 = 1/(1 + np.exp(-self.output_1))
         for index_mask in range(0, self.number_neural_network_2):
             sum_weight = self.output_1 * self.layer_2[index_mask]
             self.output_2[index_mask] = self.bias_2[index_mask] + \
                 sum_weight.sum()
-
-        self.activation = 1/(1 + np.exp(-self.output_2))
-        self.activation_round = np.clip(np.round(self.activation), 0, 1)
-        return self.activation, self.activation_round
+        self.output_2 = 1/(1 + np.exp(-self.output_2))
+        self.activation = np.clip(np.round(self.output_2), 0, 1)
+        return self.output_2, self.activation
 
     def back_propagation(self):
-        bias_derivate_1 = - (2 * ((self.target - self.activation) *
-                                np.exp(-self.output_1))) / np.square(1 + np.exp(-self.output_1))
+        bias_derivate_1 = np.zeros(self.number_neural_network_1)
+        # bias_derivate_1 = - (2 * ((self.target - self.activation) *
+        #                         np.exp(-self.output_1))) / np.square(1 + np.exp(-self.output_1))
         bias_derivate_2 = - (2 * ((self.target - self.activation) *
                                 np.exp(-self.output_2))) / np.square(1 + np.exp(-self.output_2))
-        weight_derivate_1 = np.ones(
+        weight_derivate_1 = np.zeros(
             (self.number_neural_network_1, self.number_weight_1))
-        for index_mask in range(0, self.number_neural_network_1):
-            weight_derivate_1[index_mask] = - ((2 * ((self.target - self.activation) * np.exp(-self.output_1)))
-                                             * self.img_convolution_vector) / np.square(1 + np.exp(-self.output_1))
+        # for index_mask in range(0, self.number_neural_network_1):
+        #     weight_derivate_1[index_mask] = - ((2 * ((self.target - self.activation) * np.exp(-self.output_1)))
+        #                                      * self.img_convolution_vector) / np.square(1 + np.exp(-self.output_1))
         
         weight_derivate_2 = np.ones(
             (self.number_neural_network_2, self.number_weight_2))
         for index_mask in range(0, self.number_neural_network_2):
             weight_derivate_2[index_mask] = - ((2 * ((self.target - self.activation) * np.exp(-self.output_2)))
-                                             * self.img_convolution_vector) / np.square(1 + np.exp(-self.output_2))
+                                             * self.output_1) / np.square(1 + np.exp(-self.output_2))
             
         mask_vector = np.concatenate(self.mask)
         row_mask = mask_vector.shape[0]
@@ -89,9 +90,9 @@ class DeepBackPropagation:
         for index_neural in range(0, self.number_neural_network_2):
             self.layer_2[index_neural] = self.layer_2[index_neural] + \
                 weight_derivate_2[index_neural]
-        print(mask_derivate_new)
+        # print(mask_derivate_new)
         self.mask = self.mask + mask_derivate_new
-        print(self.mask)
+        # print(self.mask)
 
     def train(self, target):
         self.target = target
@@ -102,17 +103,17 @@ from PIL import Image
 from matplotlib import pyplot
 
 percentage_to_reducer = .1
-image = Image.open('./DRIVE/Original/01_test.tif').convert('L')
-width, height = image.size
-resized_dimensions = (int(width * percentage_to_reducer), int(height * percentage_to_reducer))
-resized = image.resize(resized_dimensions)
-img = np.array(resized)
+# image = Image.open('./DRIVE/Original/01_test.tif').convert('L')
+# width, height = image.size
+# resized_dimensions = (int(width * percentage_to_reducer), int(height * percentage_to_reducer))
+# resized = image.resize(resized_dimensions)
+# img = np.array(resized)
 
 
-image_target = Image.open('./DRIVE/Groundtruth/01_manual1.tif').convert('L')
-width, height = image_target.size
-resized_dimensions = (int(width * percentage_to_reducer), int(height * percentage_to_reducer))
-resized = image_target.resize(resized_dimensions)
+# image_target = Image.open('./DRIVE/Groundtruth/01_manual1.tif').convert('L')
+# width, height = image_target.size
+# resized_dimensions = (int(width * percentage_to_reducer), int(height * percentage_to_reducer))
+# resized = image_target.resize(resized_dimensions)
 
 mask = np.array([
     [1, 1, 1],
@@ -120,10 +121,29 @@ mask = np.array([
     [1, 1, 1],
 ])
 
-target = np.array(resized).ravel()
+# target = np.array(resized).ravel()
 
-DBP = DeepBackPropagation(img=img, mask=mask)
+DBP = DeepBackPropagation(mask=mask)
 for i in range(10):
-    activation, activation_round = DBP.feed_forward()
-    print("Loss: " + str(np.mean(np.square(target - activation_round))))
-    DBP.train(target=target)
+    for ii in ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20']:
+        image = Image.open('./training/input/{}_test.tif'.format(ii)).convert('L')
+        width, height = image.size
+        resized_dimensions = (int(width * percentage_to_reducer), int(height * percentage_to_reducer))
+        resized = image.resize(resized_dimensions)
+        img = np.array(resized)
+
+        image_target = Image.open('./training/target/{}_manual1.tif'.format(ii)).convert('L')
+        width, height = image_target.size
+        resized_dimensions = (int(width * percentage_to_reducer), int(height * percentage_to_reducer))
+        resized = image_target.resize(resized_dimensions)
+        target = np.array(resized).ravel()
+        DBP.set_image(img=img)
+        output, activation = DBP.feed_forward()
+    
+
+
+
+        print(target)
+        print(output)
+        print("Loss: " + str(np.mean(np.square(target - output))))
+        DBP.train(target=target)
