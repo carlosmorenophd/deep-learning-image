@@ -102,7 +102,7 @@ class DeepBackPropagation:
 from PIL import Image
 from matplotlib import pyplot
 
-percentage_to_reducer = .1
+percentage_to_reducer = .3
 # image = Image.open('./DRIVE/Original/01_test.tif').convert('L')
 # width, height = image.size
 # resized_dimensions = (int(width * percentage_to_reducer), int(height * percentage_to_reducer))
@@ -124,7 +124,7 @@ mask = np.array([
 # target = np.array(resized).ravel()
 
 DBP = DeepBackPropagation(mask=mask)
-for i in range(10):
+for i in range(1):
     for ii in ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20']:
         image = Image.open('./training/input/{}_test.tif'.format(ii)).convert('L')
         width, height = image.size
